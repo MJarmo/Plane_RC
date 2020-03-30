@@ -4,6 +4,19 @@
 #include <RF24.h>
 #include <Servo.h>
 
+#define MAIN_WING_ROTATE_SERVO 9
+#define RARE_WING_UP_DOWN_SERVO 10
+#define ESC_MOTOR 3
+#define MIN_PULSE_WIDTH 1000
+#define MAX_PULSE_WIDTH 2000
+#define SETUP_SLEEP 300
+#define SERVO_LOWER_ANGLE 45
+#define SERVO_HIGHER_ANGLE 135
+#define ANALOG_READ_LOWEST_VAL 0
+#define ANALOG_READ_HIGHEST_VAL 1023
+#define ESC_MAX 180
+#define ESC_MIN 0
+
 struct dataSend
 {
   int Rx;
@@ -12,20 +25,15 @@ struct dataSend
   int Lx;
   int pot;
 
-  dataSend(int rx, int ry, int lx, int ly, int p)
-  :Rx(rx),
-  Ry(ry),
-  Lx(lx),
-  Ly(ly),
-  pot(p)
-  {}
   dataSend(){}
 };
 
 RF24 radio(7, 8); //csn, ce
 const uint64_t address = 1234;
 
-Servo servoMainWing;
+Servo MainWing;
+Servo rareUpDown;
+Servo ESC;
 
 void setup() {
   Serial.begin(115200);
@@ -39,35 +47,41 @@ void setup() {
   Serial.println("START_RADIO");
 
   //SERVO
-  //servoMainWing.attach(5);
-
+  MainWing.attach(MAIN_WING_ROTATE_SERVO);
+  rareUpDown.attach(RARE_WING_UP_DOWN_SERVO);
+  ESC.attach(ESC_MOTOR, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
+  MainWing.write(0);
+  rareUpDown.write(0);
+  delay(SETUP_SLEEP);
 }
-int i = 1;
+
 void loop()
 {
-  //  delay(2000);
-  //  if (i%4 == 0)  servoMainWing.write(80);
-  //  //else if (i%3 ==0) servoMainWing.writeMicroseconds(2000);
-  //  else servoMainWing.write(0);
-  //  delay(15);
-  // ++i;
-
-
   if (radio.available())
   {
-         Serial.println("Radio available");
+        Serial.println("Radio available");
         dataSend d;
-       // int msg[3];
         radio.read(&d, sizeof(d));
         Serial.println(d.Rx);
         Serial.println(d.Ry);
         Serial.println(d.Ly);
         Serial.println(d.pot);
 
-
-//    char text[32] = {0};
-//    radio.read(&text, sizeof(text));
-//    Serial.println(text);
-   delay(5);
+        MainWing.write(map(d.Ry, ANALOG_READ_LOWEST_VAL, ANALOG_READ_HIGHEST_VAL, SERVO_LOWER_ANGLE, SERVO_HIGHER_ANGLE));
+        rareUpDown.write(map(d.Rx, ANALOG_READ_LOWEST_VAL, ANALOG_READ_HIGHEST_VAL, SERVO_LOWER_ANGLE, SERVO_HIGHER_ANGLE));
+        ESC.write(map(d.pot, ANALOG_READ_LOWEST_VAL, ANALOG_READ_HIGHEST_VAL, ESC_MIN, ESC_MAX));
+        delay(5);
   }
+  else
+  {
+    Serial.println("LOST CONNECTION");
+    turnAroundMonuver();
+    
+  }
+}
+
+void turnAroundMonuver();
+{
+  ESC.write(0);
+  //rest implement when gyroscope installed
 }
