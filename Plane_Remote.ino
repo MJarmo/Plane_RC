@@ -15,18 +15,36 @@
 #define MICRO_SLEEP 15
 #define QUICK_SLEEP 300
 #define NORMAL_SLEEP 500
+struct dataSend
+{
+  int Rx;
+  int Ry;
+  int Ly;
+  int Lx;
+  int pot;
 
+  dataSend(int rx, int ry, int lx, int ly, int p)
+  :Rx(rx),
+  Ry(ry),
+  Lx(lx),
+  Ly(ly),
+  pot(p)
+  {}
+};
 
 RF24 radio(7, 8);
 const uint64_t address = 1234;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   radio.begin();
   //radio.setRetries(15, 15);
   radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_LOW);
+  radio.setPALevel(RF24_PA_MIN);
   radio.stopListening();
+  radio.setDataRate( RF24_250KBPS );
+  radio.setAutoAck(false);
+
 
   pinMode(joyLeftButton, INPUT);
   digitalWrite(joyLeftButton, HIGH);
@@ -34,6 +52,7 @@ void setup() {
 
 void loop() {
 
+  dataSend d(analogRead(joyRightUpDown), analogRead(joyRightRotate), analogRead(joyLeftY), analogRead(joyLeftX), analogRead(potentiometer));
   int RxValue = analogRead(joyRightUpDown);
   int RyValue = analogRead(joyRightRotate);
   int LyValue = analogRead(joyLeftY);
@@ -41,21 +60,22 @@ void loop() {
   int pot = analogRead(potentiometer);
   bool buttonLeft = digitalRead(joyLeftButton);
 
-  //  int msg[3];
-  //  msg[0] = RxValue;
-  //  msg[1] = RyValue;
-  //  msg[2] = LyValue;
-  //  msg[3] = pot;
+//    int msg[3];
+//    msg[0] = RxValue;
+//    msg[1] = RyValue;
+//    msg[2] = LyValue;
+//    msg[3] = pot;
 
-  // radio.write(&msg, sizeof(msg));
+  bool s = radio.write(&d, sizeof(d));
   // const char text[] = "sygnal";
   // radio.write(&text, sizeof(text));
-  delay(100); //tmp delay
+  //delay(15); //tmp delay
   //  Serial.println(RxValue);
   //  Serial.println(RyValue);
-  Serial.println(LyValue);
-  Serial.println(LxValue);
-  Serial.println(buttonLeft);
+  Serial.println(RxValue);
+  Serial.println(d.Ly);
+  Serial.println(d.pot);
+  Serial.println(s);
 
   if (!buttonLeft)
   {
@@ -159,12 +179,12 @@ void switch_RF_PA_LvL()
 
       if (LOW_TRIGGER > analogRead(joyLeftY)) //up
       {
-        if (menuPos == MENUPOSMAX) menuPos = 1;
-        else ++menuPos;
+//        if (menuPos == MENUPOSMAX) menuPos = 1;
+  //      else ++menuPos;
       }
       else if (HIGH_TRIGGER < analogRead(joyLeftY))
       {
-
+ 
       }
       delay(15);
     }
