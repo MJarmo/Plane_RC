@@ -4,8 +4,9 @@
 #include <RF24.h>
 #include <Servo.h>
 
-#define MAIN_WING_ROTATE_SERVO 9
-#define RARE_WING_UP_DOWN_SERVO 10
+#define MAIN_WING_ROTATE_SERVO 11
+#define RARE_WING_UP_DOWN_SERVO 9
+#define RARE_WING_LEFT_RIGHT_SERVO 10
 #define ESC_MOTOR 3
 #define MIN_PULSE_WIDTH 1000
 #define MAX_PULSE_WIDTH 2000
@@ -33,6 +34,7 @@ const uint64_t address = 1234;
 
 Servo MainWing;
 Servo rareUpDown;
+Serwo rareLeftRight;
 Servo ESC;
 
 void setup() {
@@ -49,9 +51,11 @@ void setup() {
   //SERVO
   MainWing.attach(MAIN_WING_ROTATE_SERVO);
   rareUpDown.attach(RARE_WING_UP_DOWN_SERVO);
+  rareLeftRight.attach(RARE_WING_LEFT_RIGHT_SERVO);
   ESC.attach(ESC_MOTOR, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
   MainWing.write(0);
   rareUpDown.write(0);
+  rareLeftRight.write(0);
   delay(SETUP_SLEEP);
 }
 
@@ -59,6 +63,7 @@ void loop()
 {
   if (radio.available())
   {
+    /*
         Serial.println("Radio available");
         dataSend d;
         radio.read(&d, sizeof(d));
@@ -66,9 +71,10 @@ void loop()
         Serial.println(d.Ry);
         Serial.println(d.Ly);
         Serial.println(d.pot);
-
+    */
         MainWing.write(map(d.Ry, ANALOG_READ_LOWEST_VAL, ANALOG_READ_HIGHEST_VAL, SERVO_LOWER_ANGLE, SERVO_HIGHER_ANGLE));
         rareUpDown.write(map(d.Rx, ANALOG_READ_LOWEST_VAL, ANALOG_READ_HIGHEST_VAL, SERVO_LOWER_ANGLE, SERVO_HIGHER_ANGLE));
+        rareLeftRight.write(map(d.Lx, ANALOG_READ_LOWEST_VAL, ANALOG_READ_HIGHEST_VAL, SERVO_LOWER_ANGLE, SERVO_HIGHER_ANGLE));
         ESC.write(map(d.pot, ANALOG_READ_LOWEST_VAL, ANALOG_READ_HIGHEST_VAL, ESC_MIN, ESC_MAX));
         delay(5);
   }
@@ -76,7 +82,6 @@ void loop()
   {
     Serial.println("LOST CONNECTION");
     turnAroundMonuver();
-    
   }
 }
 
