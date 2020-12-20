@@ -34,7 +34,7 @@ const uint64_t address = 1234;
 
 Servo MainWing;
 Servo rareUpDown;
-Serwo rareLeftRight;
+Servo rareLeftRight;
 Servo ESC;
 
 void setup() {
@@ -63,10 +63,11 @@ void loop()
 {
   if (radio.available())
   {
-    /*
-        Serial.println("Radio available");
         dataSend d;
         radio.read(&d, sizeof(d));
+    /*
+        Serial.println("Radio available");
+
         Serial.println(d.Rx);
         Serial.println(d.Ry);
         Serial.println(d.Ly);
@@ -85,7 +86,7 @@ void loop()
   }
 }
 
-void turnAroundMonuver();
+void turnAroundMonuver()
 {
   ESC.write(0);
   //rest implement when gyroscope installed
